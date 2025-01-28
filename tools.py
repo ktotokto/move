@@ -1,7 +1,7 @@
 import pygame
 import os
 import sys
-from classes import Tile, Enemy, Player, Wall
+from classes import Tile, Player, Wall, Skeleton, Torch
 from groops import all_sprites, enemy_group, wall_group
 
 tile_width = tile_height = 64
@@ -62,18 +62,25 @@ def load_level(filename):
 def generate_level(level, player_image):
     new_player, x, y = None, None, None
     player_x, player_y = None, None
+    enemy_list = []
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '@':
                 player_x, player_y = x, y
-                Tile((all_sprites,), x, y, 'test_pol.png', (64, 64), (0, 35))
+                Tile((all_sprites,), x, y, 'tile.png', (tile_width, tile_height), (0, 35))
             elif level[y][x] == '1':
-                Tile((all_sprites,), x, y, 'test_pol.png', (64, 64), (0, 35))
+                Tile((all_sprites,), x, y, 'tile.png', (tile_width, tile_height), (0, 35))
             elif level[y][x] == '#':
-                Wall((all_sprites, wall_group), x, y, 'test_block.png', (64, 64))
+                Wall((all_sprites, wall_group), x, y, 'block.png', (tile_width, tile_height))
+            elif level[y][x] == 'S':
+                enemy_list.append(('S', x, y))
+                Tile((all_sprites,), x, y, 'tile.png', (tile_width, tile_height), (0, 35))
             elif level[y][x] == '!':
-                Enemy((all_sprites, enemy_group), x, y, 'test_enemy.png', (64, 64))
-                Tile((all_sprites,), x, y, 'test_pol.png', (64, 64), (0, 35))
-
-    new_player = Player((all_sprites,), player_image, 4, 1, 49, 64, tile_width, tile_height, (wall_group,))
+                Wall((all_sprites, wall_group), x, y, 'block.png', (tile_width, tile_height))
+                Torch((all_sprites,), load_image('torch_wall.png'), 3, 1, x, y, tile_width, tile_height)
+    for enemy in enemy_list:
+        if enemy[0] == 'S':
+            Skeleton((all_sprites, enemy_group), (load_image('skeleton_1.png'), load_image('skeleton_2.png')), 4, 1, enemy[1], enemy[2], tile_width,
+                     tile_height, (wall_group,))
+    new_player = Player((all_sprites,), player_image, 4, 1, player_x, player_y, tile_width, tile_height, (wall_group,))
     return new_player, x, y
