@@ -2,6 +2,7 @@ import pygame
 import os
 import sys
 from groops import all_sprites, effects_group, enemy_group, attack_group
+from random import randint
 
 pygame.mixer.init()
 
@@ -79,48 +80,60 @@ class Wall(pygame.sprite.Sprite):
 
 
 class Enemy(AnimationSprite):
-    def __init__(self, groups, sheet, health_points, columns, rows, x, y, tile_width, tile_height, sound_url,
+    def __init__(self, groups, sheet, hit_points, damage, columns, rows, x, y, tile_width, tile_height, sound_url,
                  conflict_groups=None):
         super().__init__(groups, sheet, columns, rows, x, y, tile_width, tile_height, conflict_groups)
         self.sound_dead = pygame.mixer.Sound(sound_url)
-        self.health_points = health_points
+        self.hit_points, self.damage = hit_points, damage
         self.list_move, self.flag_revers, self.sheet_index = [0, 0, 1, 1], False, 0
         self.cut_sheet(sheet[self.sheet_index], columns, rows)
         self.sheet, self.columns, self.rows = sheet, columns, rows
         self.image = self.frames[self.cur_frame]
-        self.rect = self.rect.move(x * tile_height + 8, y * tile_width)
+        self.rect = self.rect.move(x * tile_width, y * tile_height)
 
     def damage_counter(self, damage):
-        self.health_points -= damage
-        if self.health_points <= 0:
+        self.hit_points -= damage
+        if self.hit_points <= 0:
             self.sound_dead.play()
             self.kill()
 
 
 class Skeleton(Enemy):
-    def __init__(self, groups, health_points, sheet, columns, rows, x, y, tile_width, tile_height, sound_url,
+    def __init__(self, groups, hit_points, damage, sheet, columns, rows, x, y, tile_width, tile_height, sound_url,
                  conflict_groups=None):
         sheet = [pygame.transform.scale(sheet[i], (sheet[i].get_width() * 2.6, sheet[i].get_height() * 2.6)) for i in
                  range(len(sheet))]
-        super().__init__(groups, sheet, health_points, columns, rows, x, y, tile_width, tile_height, sound_url,
+        super().__init__(groups, sheet, hit_points, damage, columns, rows, x, y, tile_width, tile_height, sound_url,
                          conflict_groups)
 
     def update_move(self, count_move):
-        if self.list_move[count_move]:
-            self.rect = self.rect.move(self.delta_x, self.delta_y_end)
-        else:
-            self.rect = self.rect.move(self.delta_x, self.delta_y_start)
+        self.rect = self.rect.move(self.delta_x, self.delta_y)
 
     def move(self):
-        self.delta_x, self.delta_y_start, self.delta_y_end = 0, 0, 0
-        self.delta_x, self.delta_y_start, self.delta_y_end \
-            = -self.tile_width // 4, -self.tile_height // 4, self.tile_height // 4
-        x, y = self.rect.x, self.rect.y
-        self.sheet_index = (self.sheet_index + 1) % len(self.sheet)
-        self.frames, self.cur_frame = [], 0
-        self.cut_sheet(self.sheet[self.sheet_index], self.columns, self.rows)
-        self.image = self.frames[self.cur_frame]
-        self.rect = self.rect.move(x, y)
+        while True:
+            self.delta_x, self.delta_y = 0, 0
+            move, axis_x = randint(-1, 1), randint(0, 1)
+            if axis_x:
+                self.delta_x = self.tile_width * move // 4
+            else:
+                self.delta_y = self.tile_height * move // 4
+            self.rect = self.rect.move(self.delta_x * 4, self.delta_y * 4)
+            if pygame.sprite.spritecollideany(self, *self.conflict_groups):
+                self.rect = self.rect.move(-self.delta_x * 4, -self.delta_y * 4)
+                self.delta_x, self.delta_y = 0, 0
+            else:
+                self.rect = self.rect.move(-self.delta_x * 4, -self.delta_y * 4)
+                break
+
+            x, y = self.rect.x, self.rect.y
+            self.sheet_index = (self.sheet_index + 1) % len(self.sheet)
+            self.frames, self.cur_frame = [], 0
+            self.cut_sheet(self.sheet[self.sheet_index], self.columns, self.rows)
+            self.image = self.frames[self.cur_frame]
+            self.rect = self.rect.move(x, y)
+
+    def attack(self):
+        pass
 
 
 class Attack(pygame.sprite.Sprite):
@@ -182,7 +195,7 @@ class Player(AnimationSprite):
         sheet = pygame.transform.scale(sheet, (sheet.get_width() * 2.9, sheet.get_height() * 2.9))
         self.cut_sheet(sheet, columns, rows)
         self.image = self.frames[self.cur_frame]
-        self.rect = self.rect.move(x * tile_height + 8, y * tile_width - 12)
+        self.rect = self.rect.move(x * tile_height, y * tile_width - 12)
 
     def update(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
@@ -214,14 +227,12 @@ class Player(AnimationSprite):
             if key == keys_move[2]:
                 self.delta_x, self.delta_y_start, self.delta_y_end \
                     = -self.tile_width // 4, -self.tile_height // 4, self.tile_height // 4
-                self.rect = self.rect.move(-8, 0) if not self.flag_revers_horizontal else self.rect.move(0, 0)
                 self.flag_revers_horizontal = True
                 self.flag_revers_attack = (True, 0)
                 attack_x, attack_y = -34, 30
             if key == keys_move[3]:
                 self.delta_x, self.delta_y_start, self.delta_y_end \
                     = self.tile_width // 4, -self.tile_height // 4, self.tile_height // 4
-                self.rect = self.rect.move(8, 0) if self.flag_revers_horizontal else self.rect.move(0, 0)
                 self.flag_revers_horizontal = False
                 self.flag_revers_attack = (False, 0)
                 attack_x, attack_y = 66, 30
@@ -234,20 +245,24 @@ class Player(AnimationSprite):
                 self.delta_x, self.delta_y_start, self.delta_y_end = 0, 0, 0
                 return True
             else:
-                self.rect = pygame.Rect(self.rect.x + self.delta_x * 4,
-                                        self.rect.y + self.delta_y_start * 2 + self.delta_y_end * 2, 49, 64)
+                self.rect = self.rect.move(self.delta_x * 4, self.delta_y_start * 2 + self.delta_y_end * 2)
                 if pygame.sprite.spritecollideany(self, *self.conflict_groups):
                     for group in self.conflict_groups:
                         group.update()
-                    self.rect = pygame.Rect(self.rect.x - self.delta_x * 4,
-                                            self.rect.y - self.delta_y_start * 2 - self.delta_y_end * 2, 49, 64)
+                    self.rect = self.rect.move(-self.delta_x * 4, -self.delta_y_start * 2 - self.delta_y_end * 2)
                     self.delta_x, self.delta_y_start, self.delta_y_end = 0, 0, 0
                     return False
-                self.rect = pygame.Rect(self.rect.x - self.delta_x * 4,
-                                        self.rect.y - self.delta_y_start * 2 - self.delta_y_end * 2, 49, 64)
+                self.rect = self.rect.move(-self.delta_x * 4, -self.delta_y_start * 2 - self.delta_y_end * 2)
             return True
         elif key == pygame.K_q:
             self.attack_flag = False if self.attack_flag else True
         return False
 
 
+class Wizard(Enemy):
+    def __init__(self, groups, hit_points, damage, sheet, columns, rows, x, y, tile_width, tile_height, sound_url,
+                 conflict_groups=None):
+        sheet = [pygame.transform.scale(sheet[i], (sheet[i].get_width() * 2.6, sheet[i].get_height() * 2.6)) for i in
+                 range(len(sheet))]
+        super().__init__(groups, sheet, hit_points, damage, columns, rows, x, y, tile_width, tile_height, sound_url,
+                         conflict_groups)

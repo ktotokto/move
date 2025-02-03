@@ -4,24 +4,9 @@ from classes import Camera
 from tools import load_image, terminate, generate_level, load_level
 from groops import all_sprites, enemy_group, effects_group, attack_group
 
-
-def fps():
-    camera.update(player)
-    for sprite in all_sprites:
-        camera.apply(sprite)
-    for enemy in enemy_group:
-        enemy.move()
-    for i in range(4):
-        screen.fill(BLACK)
-        all_sprites.draw(screen)
-        all_sprites.update()
-        pygame.display.flip()
-        clock.tick(FPS)
-
-
 BLACK = pygame.Color("#000000")
 RED = pygame.Color("#ff0000")
-SIZE = WIDTH, HEIGHT = (1024, 800)
+SIZE = WIDTH, HEIGHT = (1024, 768)
 FPS = 60
 
 player_image = load_image('img/ger.png')
@@ -43,20 +28,20 @@ for sprite in all_sprites:
 screen.fill(BLACK)
 all_sprites.draw(screen)
 pygame.display.flip()
-sound_main.set_volume(0.4)
+sound_main.set_volume(0)
 sound_main.play()
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
         if event.type == pygame.KEYDOWN and not animation:
-            camera.update(player)
-            for sprite in all_sprites:
-                camera.apply(sprite)
             animation = True if player.move(event.key) else False
             if animation:
                 for enemy in enemy_group:
                     enemy.move()
+                    camera.update(player)
+                    for sprite in all_sprites:
+                        camera.apply(sprite)
     tick_animation = 0 if tick_animation > 16 else tick_animation + 1
     tick_effect = 0 if tick_effect > 4 else tick_effect + 1
     tick_move = 0 if tick_move > 4 else tick_move + 1
