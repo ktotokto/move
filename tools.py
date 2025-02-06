@@ -83,7 +83,7 @@ def generate_level(level, player_image):
                 Door((all_sprites, wall_group), player_group,  x, y, 'img/door_1.png', (tile_width, tile_height), (0, 35))
     for enemy in enemy_list:
         if enemy[0] == 'S':
-            Skeleton((all_sprites, enemy_group), 1, 1, (load_image('img/skeleton_1.png'), load_image('img/skeleton_2.png')), 4, 1, enemy[1], enemy[2], tile_width,
-                     tile_height, 'data/sound/skel_death.mp3', (wall_group,))
+            Skeleton((all_sprites, enemy_group), 1, 1,  (load_image('img/skeleton_1.png'), load_image('img/skeleton_2.png')), 4, 1, enemy[1], enemy[2], tile_width,
+                     tile_height, 'data/sound/skel_death.mp3', (wall_group, player_group))
     new_player = Player((all_sprites, player_group), player_image, 4, 1, player_x, player_y, tile_width, tile_height, (wall_group,))
     return new_player, x, y

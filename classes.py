@@ -1,7 +1,7 @@
 import pygame
 import os
 import sys
-from groops import all_sprites, effects_group, enemy_group, attack_group
+from groops import all_sprites, effects_group, enemy_group, attack_group, wall_group
 from random import randint
 
 pygame.mixer.init()
@@ -17,7 +17,8 @@ def load_image(name, directory):
 
 
 class AnimationSprite(pygame.sprite.Sprite):
-    def __init__(self, groups, sheet, columns, rows, x, y, tile_width, tile_height, conflict_groups=None):
+    def __init__(self, groups, sheet, columns, rows, x, y, tile_width, tile_height,
+                 conflict_groups=None):
         super().__init__(*groups)
         self.frames, self.cur_frame = [], 0
         self.tile_height, self.tile_width = tile_height, tile_width
@@ -80,8 +81,8 @@ class Wall(pygame.sprite.Sprite):
 
 
 class Enemy(AnimationSprite):
-    def __init__(self, groups, sheet, hit_points, damage, columns, rows, x, y, tile_width, tile_height, sound_url,
-                 conflict_groups=None):
+    def __init__(self, groups, sheet, hit_points, damage, columns, rows, x, y, tile_width, tile_height,
+                 sound_url, conflict_groups=None):
         super().__init__(groups, sheet, columns, rows, x, y, tile_width, tile_height, conflict_groups)
         self.sound_dead = pygame.mixer.Sound(sound_url)
         self.hit_points, self.damage = hit_points, damage
@@ -90,6 +91,29 @@ class Enemy(AnimationSprite):
         self.sheet, self.columns, self.rows = sheet, columns, rows
         self.image = self.frames[self.cur_frame]
         self.rect = self.rect.move(x * tile_width, y * tile_height)
+        self.delta_x, self.delta_y = 0, 0
+
+    def update_vision(self, radius_vision):
+        vision = set()
+        coord_walls_list = [(wall.rect.x // 64, wall.rect.y // 64) for wall in wall_group]
+        radius_list = [(radius_vision + 1, radius_vision + 1, 1, 1),
+                       (radius_vision + 1, -(radius_vision + 1), 1, -1),
+                       (-(radius_vision + 1), radius_vision + 1, -1, 1),
+                       (-(radius_vision + 1), -(radius_vision + 1), -1, -1)]
+        for end_x, end_y, step_x, step_y in radius_list:
+            for y in range(0, end_y, step_y):
+                flag_wall = True
+                for x in range(0, end_x, step_x):
+                    if (self.rect.x // 64 + x, self.rect.y // 64 + y) not in coord_walls_list and abs(y) + abs(
+                            x) <= radius_vision:
+                        vision.add((self.rect.x // 64 + x, self.rect.y // 64 + y))
+                        flag_wall = False
+                    else:
+                        vision.add((self.rect.x // 64 + x, self.rect.y // 64 + y))
+                        break
+                if flag_wall:
+                    break
+        return vision
 
     def damage_counter(self, damage):
         self.hit_points -= damage
@@ -97,43 +121,56 @@ class Enemy(AnimationSprite):
             self.sound_dead.play()
             self.kill()
 
+    def move(self, activity, x=0, y=0):
+        self.delta_x, self.delta_y = 0, 0
+        if activity == 'pass':
+            move, axis_coord = randint(-1, 1), randint(0, 1)
+            if axis_coord:
+                self.delta_x = self.tile_width * move
+            else:
+                self.delta_y = self.tile_height * move
+        elif activity == 'chase':
+            self.delta_x, self.delta_y = (x * 64 - self.rect.x), (y * 64 - self.rect.y)
+        elif activity == 'attack':
+            self.attack(x, y)
+
+        self.rect = self.rect.move(self.delta_x, self.delta_y)
+        for conflict_group in self.conflict_groups:
+            if pygame.sprite.spritecollideany(self, conflict_group):
+                self.rect = self.rect.move(-self.delta_x, -self.delta_y)
+                self.delta_x, self.delta_y = 0, 0
+                break
+        self.rect = self.rect.move(-self.delta_x, -self.delta_y)
+
 
 class Skeleton(Enemy):
-    def __init__(self, groups, hit_points, damage, sheet, columns, rows, x, y, tile_width, tile_height, sound_url,
+    def __init__(self, groups, hit_points, damage, sheet, columns, rows, x, y, tile_width, tile_height,
+                 sound_url,
                  conflict_groups=None):
         sheet = [pygame.transform.scale(sheet[i], (sheet[i].get_width() * 2.6, sheet[i].get_height() * 2.6)) for i in
                  range(len(sheet))]
-        super().__init__(groups, sheet, hit_points, damage, columns, rows, x, y, tile_width, tile_height, sound_url,
-                         conflict_groups)
+        super().__init__(groups, sheet, hit_points, damage, columns, rows, x, y, tile_width, tile_height,
+                         sound_url, conflict_groups)
 
     def update_move(self, count_move):
-        self.rect = self.rect.move(self.delta_x, self.delta_y)
+        self.rect = self.rect.move(self.delta_x // 4, self.delta_y // 4)
 
-    def move(self):
-        while True:
-            self.delta_x, self.delta_y = 0, 0
-            move, axis_x = randint(-1, 1), randint(0, 1)
-            if axis_x:
-                self.delta_x = self.tile_width * move // 4
-            else:
-                self.delta_y = self.tile_height * move // 4
-            self.rect = self.rect.move(self.delta_x * 4, self.delta_y * 4)
-            if pygame.sprite.spritecollideany(self, *self.conflict_groups):
-                self.rect = self.rect.move(-self.delta_x * 4, -self.delta_y * 4)
-                self.delta_x, self.delta_y = 0, 0
-            else:
-                self.rect = self.rect.move(-self.delta_x * 4, -self.delta_y * 4)
-                break
+    def move(self, activity, x=0, y=0):
+        super().move(activity, x, y)
+        x, y = self.rect.x, self.rect.y
+        self.sheet_index = (self.sheet_index + 1) % len(self.sheet)
+        self.frames, self.cur_frame = [], 0
+        self.cut_sheet(self.sheet[self.sheet_index], self.columns, self.rows)
+        self.image = self.frames[self.cur_frame]
+        self.rect = self.rect.move(x, y)
 
-            x, y = self.rect.x, self.rect.y
-            self.sheet_index = (self.sheet_index + 1) % len(self.sheet)
-            self.frames, self.cur_frame = [], 0
-            self.cut_sheet(self.sheet[self.sheet_index], self.columns, self.rows)
-            self.image = self.frames[self.cur_frame]
-            self.rect = self.rect.move(x, y)
-
-    def attack(self):
-        pass
+    def attack(self, player_x, player_y):
+        image_list = [load_image(image, 'data/img/sword_attack') for image in
+                      os.listdir('data/img/sword_attack')]
+        print(self.rect.x, self.rect.y)
+        print(player_x, player_y)
+        Attack((all_sprites, effects_group, attack_group), 1, (enemy_group,), image_list, self,
+               (player_x - self.rect.x, player_y - self.rect.y), (False, 0))
 
 
 class Attack(pygame.sprite.Sprite):
@@ -183,12 +220,13 @@ class Camera:
         obj.rect.y += self.dy
 
     def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w // 2 - self.w // 2)
-        self.dy = -(target.rect.y + target.rect.h // 2 - self.h // 2)
+        self.dx = -((target.rect.x + target.rect.w // 2 - self.w // 2) // 64) * 64
+        self.dy = -((target.rect.y + target.rect.h // 2 - self.h // 2) // 64) * 64
 
 
 class Player(AnimationSprite):
-    def __init__(self, groups, sheet, columns, rows, x, y, tile_width, tile_height, conflict_groups=None):
+    def __init__(self, groups, sheet, columns, rows, x, y, tile_width, tile_height,
+                 conflict_groups=None):
         super().__init__(groups, sheet, columns, rows, x, y, tile_width, tile_height, conflict_groups)
         self.list_move, self.flag_revers_horizontal, self.attack_flag = [0, 0, 1, 1], False, False
         self.flag_revers_attack = (False, 0)
