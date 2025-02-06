@@ -1,7 +1,7 @@
 import pygame
 import os
 import sys
-from groops import all_sprites, effects_group, enemy_group, attack_group, wall_group
+from groops import all_sprites, effects_group, enemy_group, attack_group, wall_group, player_group
 from random import randint
 
 pygame.mixer.init()
@@ -169,7 +169,7 @@ class Skeleton(Enemy):
                       os.listdir('data/img/sword_attack')]
         print(self.rect.x, self.rect.y)
         print(player_x, player_y)
-        Attack((all_sprites, effects_group, attack_group), 1, (enemy_group,), image_list, self,
+        Attack((all_sprites, effects_group, attack_group), 1, (player_group,), image_list, self,
                (player_x - self.rect.x, player_y - self.rect.y), (False, 0))
 
 
@@ -234,6 +234,7 @@ class Player(AnimationSprite):
         self.cut_sheet(sheet, columns, rows)
         self.image = self.frames[self.cur_frame]
         self.rect = self.rect.move(x * tile_height, y * tile_width - 12)
+        self.hit_points = 3
 
     def update(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
@@ -295,6 +296,11 @@ class Player(AnimationSprite):
         elif key == pygame.K_q:
             self.attack_flag = False if self.attack_flag else True
         return False
+
+    def damage_counter(self, damage):
+        self.hit_points -= damage
+        if self.hit_points <= 0:
+            self.kill()
 
 
 class Wizard(Enemy):
