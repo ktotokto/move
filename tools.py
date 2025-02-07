@@ -1,7 +1,7 @@
 import pygame
 import os
 import sys
-from classes import Tile, Player, Wall, Skeleton, Torch, Door
+from classes import Tile, Player, Wall, Skeleton, Torch, Door, Wizard
 from groops import all_sprites, enemy_group, wall_group, player_group
 
 tile_width = tile_height = 64
@@ -75,15 +75,26 @@ def generate_level(level, player_image):
             elif level[y][x] == 'S':
                 enemy_list.append(('S', x, y))
                 Tile((all_sprites,), x, y, 'img/tile.png', (tile_width, tile_height), (0, 35))
+            elif level[y][x] == 'W':
+                enemy_list.append(('W', x, y))
+                Tile((all_sprites,), x, y, 'img/tile.png', (tile_width, tile_height), (0, 35))
             elif level[y][x] == '!':
                 Wall((all_sprites, wall_group), x, y, 'img/block.png', (tile_width, tile_height))
                 Torch((all_sprites,), load_image('img/torch_wall.png'), 3, 1, x, y, tile_width, tile_height)
             elif level[y][x] == "D":
                 Tile((all_sprites,), x, y, 'img/tile.png', (tile_width, tile_height), (0, 35))
-                Door((all_sprites, wall_group), player_group,  x, y, 'img/door_1.png', (tile_width, tile_height), (0, 35))
+                Door((all_sprites, wall_group), player_group, x, y, 'img/door_1.png', (tile_width, tile_height),
+                     (0, 35))
     for enemy in enemy_list:
         if enemy[0] == 'S':
-            Skeleton((all_sprites, enemy_group), 1, 1,  (load_image('img/skeleton_1.png'), load_image('img/skeleton_2.png')), 4, 1, enemy[1], enemy[2], tile_width,
+            Skeleton((all_sprites, enemy_group), 1, 1,
+                     (load_image('img/skeleton_1.png'), load_image('img/skeleton_2.png')), 4, 1, enemy[1], enemy[2],
+                     tile_width,
                      tile_height, 'data/sound/skel_death.mp3', (wall_group, player_group))
-    new_player = Player((all_sprites, player_group), player_image, 4, 1, player_x, player_y, tile_width, tile_height, (wall_group,))
+        elif enemy[0] == 'W':
+            Wizard((all_sprites, enemy_group), 1, 1,
+                   (load_image('img/wizard_1.png'),), 4, 1, enemy[1], enemy[2],
+                   tile_width, tile_height, 'data/sound/skel_death.mp3', (wall_group, player_group))
+    new_player = Player((all_sprites, player_group), player_image, 4, 1, player_x, player_y, tile_width, tile_height,
+                        (wall_group,))
     return new_player, x, y

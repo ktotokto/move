@@ -167,10 +167,11 @@ class Skeleton(Enemy):
     def attack(self, player_x, player_y):
         image_list = [load_image(image, 'data/img/sword_attack') for image in
                       os.listdir('data/img/sword_attack')]
-        print(self.rect.x, self.rect.y)
-        print(player_x, player_y)
+        player_pos = (player_x - self.rect.x,  player_y - self.rect.y)
+        attack_revers_x = True if -player_pos[0] // 64 == 1 else False
+        attack_revers_y = -player_pos[1] // 64
         Attack((all_sprites, effects_group, attack_group), 1, (player_group,), image_list, self,
-               (player_x - self.rect.x, player_y - self.rect.y), (False, 0))
+               (player_pos[0], player_pos[1]), (attack_revers_x, attack_revers_y))
 
 
 class Attack(pygame.sprite.Sprite):
@@ -310,3 +311,15 @@ class Wizard(Enemy):
                  range(len(sheet))]
         super().__init__(groups, sheet, hit_points, damage, columns, rows, x, y, tile_width, tile_height, sound_url,
                          conflict_groups)
+
+    def update_move(self, count_move):
+        self.rect = self.rect.move(self.delta_x // 4, self.delta_y // 4)
+
+    def attack(self, player_x, player_y):
+        image_list = [load_image(image, 'data/img/sword_attack') for image in
+                      os.listdir('data/img/sword_attack')]
+        player_pos = (player_x, player_y)
+        attack_revers_x = True if -player_pos[0] // 64 == 1 else False
+        attack_revers_y = -player_pos[1] // 64
+        Attack((all_sprites, effects_group, attack_group), 1, (player_group,), image_list, self,
+               (player_pos[0], player_pos[1]), (attack_revers_x, attack_revers_y))
