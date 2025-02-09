@@ -1,4 +1,4 @@
-from tools import load_level
+from tools.load_tools import load_level
 import heapq
 
 TILE = 64
