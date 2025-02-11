@@ -4,10 +4,10 @@ import time
 from tools.load_tools import load_image, load_level, draw_text
 from tools.game_tools import terminate, generate_level
 from groops import all_sprites, enemy_group, effects_group, stat, buttons_group
-from enemy_move import move_a, loader_move
+from enemy_move import Loader, level_matrix, move_a
 from classes.effects import HeartBar
 from classes.base_classes import Camera, Item
-from start_end_screen import information_screen, MenuButton, screen_menu, game_state
+from start_end_screen import information_screen, MenuButton, screen_menu, game_state, data_stat_game
 from const import BLACK, RED, GREEN, WHITE, SIZE, WIDTH, HEIGHT, FPS, MENU_TEXT, INTRO_TEXT, WIN_TEXT, DEFEAT_TEXT
 
 clock = pygame.time.Clock()
@@ -18,8 +18,10 @@ def start_level():
     name_level = game_state.get_name_level()
     player_image = load_image('img/ger.png')
     player, level_x, level_y, win_tile = generate_level(load_level(f'maps/{name_level}.txt'), player_image, name_level)
+
     items = [Item('Меч', 'Оружие ближнего боя', 1), Item('Золото', '', player.gold),
              Item('Зелье здоровья', 'Востанавливает 2 xp', 5)]
+    loader_move = Loader(level_matrix, "#!D")
     count_move = 0
     camera = Camera(WIDTH, HEIGHT)
     pygame.init()
@@ -59,6 +61,7 @@ def start_level():
                     MenuButton((all_sprites, buttons_group), item_menu, font, RED,
                                (text_coord_x, text_coord_y + i * 64))
                 buttons_group.draw(screen)
+                data_stat_game.write_down(stat["Золото собрано"], stat["Врагов убито"], stat["Время в игре"])
             if win_tile.win and not draw_win_defeat:
                 draw_win_defeat = True
                 screen.fill(BLACK)
@@ -68,6 +71,7 @@ def start_level():
                     MenuButton((all_sprites, buttons_group), item_menu, font, RED,
                                (text_coord_x, text_coord_y + i * 64))
                 buttons_group.draw(screen)
+                data_stat_game.write_down(stat["Золото собрано"], stat["Врагов убито"], stat["Время в игре"])
             elif event.type == pygame.KEYDOWN and not animation:
                 if event.key == pygame.K_ESCAPE and not inventory_open:
                     menu = not menu
@@ -102,7 +106,7 @@ def start_level():
                                 enemy.move('attack', player.rect.x, (player.rect.y + 12))
                             elif (player.rect.x // 64, (player.rect.y + 12) // 64) in enemy.update_vision(4):
                                 x, y = move_a((player.rect.x // 64, (player.rect.y + 12) // 64),
-                                              (enemy.rect.x // 64, enemy.rect.y // 64), camera)
+                                              (enemy.rect.x // 64, enemy.rect.y // 64), camera, loader_move)
                                 enemy.move('chase', x, y)
                             else:
                                 enemy.move('pass')

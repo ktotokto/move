@@ -40,16 +40,13 @@ class Loader:
         for y in range(y_offset):
             line = []
             for x in range(x_offset):
-                line.append(self.grid[y + h_move - self.y_0][x + w_move - self.x_0])
+                    line.append(self.grid[y + h_move - self.y_0][x + w_move - self.x_0])
             self.new_grid.append(line)
         return self.new_grid
 
     def update_init_coord(self, camera):
         self.x_0 += camera.dx // 64
         self.y_0 += camera.dy // 64
-
-
-loader_move = Loader(level_matrix, "#!D")
 
 
 def get_neighbours(x, y, grid):
@@ -86,9 +83,9 @@ def dijkstra(start, goal, graph):
     return visited
 
 
-def move_a(start, end, camera):
+def move_a(start, end, camera, loader):
     graph = {}
-    grid = loader_move.load_level_move(camera)
+    grid = loader.load_level_move(camera)
     for y, row in enumerate(grid):
         for x, col in enumerate(row):
             graph[(x, y)] = graph.get((x, y), []) + get_neighbours(x, y, grid)

@@ -2,10 +2,11 @@ import pygame
 
 from groops import all_sprites, buttons_group
 from tools.game_tools import terminate
-from tools.load_tools import load_image
-from const import RED, BLACK, FPS, INTRO_TEXT, LEVEL_TEXT, DOP_TEXT, SIZE, WIDTH, HEIGHT
+from tools.load_tools import load_image, DataStat
+from const import RED, BLACK, FPS, INTRO_TEXT, LEVEL_TEXT, DOP_TEXT, SIZE, WIDTH, HEIGHT, STAT_TEXT, DATABASE
 
 pygame.mixer.init()
+data_stat_game = DataStat(DATABASE)
 sound = pygame.mixer.Sound("data/sound/level_1.mp3")
 sound.set_volume(0.5)
 sound.play(-1)
@@ -60,6 +61,8 @@ class MenuButton(pygame.sprite.Sprite):
                 game_state.set_menu_state(True)
                 next_screen_menu(screen_menu, INTRO_TEXT)
                 return False
+            elif self.text == "Глобальная статистика":
+                next_screen_menu(screen_menu, data_stat_game.unload_sqlite(STAT_TEXT))
             elif self.text == "Перезапуск":
                 return False
             elif self.text == "Обратно к игре":
