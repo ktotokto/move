@@ -26,7 +26,6 @@ def start_level():
     inventory_open, game, menu, animation, draw_win_defeat = False, True, False, False, False
     selected_item_index = 0
     screen = pygame.display.set_mode(SIZE)
-    pygame.display.set_caption("MOVE")
     start_time = time.time()
     tick_effect, tick_move, tick_animation = 0, 0, 0
     heart_bar = HeartBar((10, 10), 5)
