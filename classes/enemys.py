@@ -196,13 +196,13 @@ class Beholder(Enemy):
                           os.listdir('data/img/beholder_attack')]
             for i in range(3):
                 Attack((all_sprites, effects_group, attack_group), self.damage, (player_group, enemy_group),
-                       image_list, self, (80 + (i * 64), 32), 2.6, (False, 0), "beholder_attack.mp3").rect.h = 16
+                       image_list, self, (80 + (i * 64), 32), 2.6, (False, 0)).rect.h = 16
                 Attack((all_sprites, effects_group, attack_group), self.damage, (player_group, enemy_group),
-                       image_list, self, (-48 - (i * 64), 32), 2.6, (False, 0), "beholder_attack.mp3").rect.h = 16
+                       image_list, self, (-48 - (i * 64), 32), 2.6, (False, 0)).rect.h = 16
                 Attack((all_sprites, effects_group, attack_group), self.damage, (player_group, enemy_group),
-                       image_list, self, (16, 80 + (i * 64)), 2.6, (False, 1), "beholder_attack.mp3").rect.h = 16
+                       image_list, self, (16, 80 + (i * 64)), 2.6, (False, 1)).rect.h = 16
                 Attack((all_sprites, effects_group, attack_group), self.damage, (player_group, enemy_group),
-                       image_list, self, (16, -48 - (i * 64)), 2.6, (False, -1), "beholder_attack.mp3").rect.h = 16
+                       image_list, self, (16, -48 - (i * 64)), 2.6, (False, -1)).rect.h = 16
         else:
             self.time_attack += 1
 
