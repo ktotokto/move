@@ -4,7 +4,7 @@ from tools.load_tools import load_image
 
 
 class Attack(pygame.sprite.Sprite):
-    def __init__(self, groups, damage, conflict_groups, images_list, sprite, shift, image_change, revers=(False, 0)):
+    def __init__(self, groups, damage, conflict_groups, images_list, sprite, shift, image_change, revers=(False, 0), sound="attack_sound_1.mp3"):
         super().__init__(*groups)
         self.images_list, self.image_index = [
             pygame.transform.scale(image, (image.get_width() * image_change, image.get_height() * image_change))
@@ -15,7 +15,7 @@ class Attack(pygame.sprite.Sprite):
         self.conflict_groups = conflict_groups
         self.rect = pygame.Rect(sprite.rect.x + shift[0],
                                 sprite.rect.y + shift[1], 1, 1)
-        pygame.mixer.Sound('data/sound/attack_sound_1.mp3').play()
+        pygame.mixer.Sound(f'data/sound/{sound}').play()
 
     def update_effect(self):
         if self.damage_flag:
@@ -44,9 +44,10 @@ class HeartBar:
     def __init__(self, pos, max_hearts):
         self.pos = pos
         self.max_hearts = max_hearts
-        self.full_heart = load_image("img/full_heart.png")
-        self.half_heart = load_image("img/half_heart.png")
-        self.empty_heart = load_image("img/empty_heart.png")
+        img_size = load_image("img/full_heart.png").get_width() * 2, load_image("img/full_heart.png").get_height() * 2
+        self.full_heart = pygame.transform.scale(load_image("img/full_heart.png"), (img_size[0], img_size[1]))
+        self.half_heart = pygame.transform.scale(load_image("img/half_heart.png"), (img_size[0], img_size[1]))
+        self.empty_heart = pygame.transform.scale(load_image("img/empty_heart.png"), (img_size[0], img_size[1]))
         self.hearts = [self.full_heart] * max_hearts
 
     def draw(self, screen):

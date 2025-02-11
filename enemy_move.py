@@ -2,7 +2,7 @@ from tools.load_tools import load_level
 import heapq
 
 TILE = 64
-level_matrix = load_level('maps/level_test.txt')
+level_matrix = load_level('maps/dungeon.txt')
 cols, rows = len(level_matrix[0]), len(level_matrix)
 
 

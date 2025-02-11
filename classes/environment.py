@@ -59,3 +59,14 @@ class Loot(pygame.sprite.Sprite):
             for player in player_group:
                 player.gold += 1
             self.kill()
+
+
+class Win(Tile):
+    def __init__(self, groups, pos_x, pos_y, image, tile_size, move=(0, 0)):
+        super().__init__(groups, pos_x, pos_y, image, tile_size, move)
+        self.win = False
+
+    def update(self):
+        for player in player_group:
+            if (player.rect.x // 64, (player.rect.y + 12) // 64) == (self.rect.x // 64, self.rect.y // 64):
+                self.win = True

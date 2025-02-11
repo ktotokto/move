@@ -45,11 +45,10 @@ class Enemy(AnimationSprite):
 
     def damage_counter(self, damage):
         self.hit_points -= damage
-        print(damage)
         if self.hit_points <= 0:
             self.sound_dead.play()
             Loot((all_sprites,), self.rect.x // 64, self.rect.y // 64, 'img/gold.png', (self.rect.w, self.rect.w))
-            stat["kill_enemy"] += 1
+            stat["Врагов убито"] += 1
             self.kill()
 
     def move(self, activity, x=0, y=0):
@@ -197,13 +196,13 @@ class Beholder(Enemy):
                           os.listdir('data/img/beholder_attack')]
             for i in range(3):
                 Attack((all_sprites, effects_group, attack_group), self.damage, (player_group, enemy_group),
-                       image_list, self, (80 + (i * 64), 32), 2.6, (False, 0)).rect.h = 16
+                       image_list, self, (80 + (i * 64), 32), 2.6, (False, 0), "beholder_attack.mp3").rect.h = 16
                 Attack((all_sprites, effects_group, attack_group), self.damage, (player_group, enemy_group),
-                       image_list, self, (-48 - (i * 64), 32), 2.6, (False, 0)).rect.h = 16
+                       image_list, self, (-48 - (i * 64), 32), 2.6, (False, 0), "beholder_attack.mp3").rect.h = 16
                 Attack((all_sprites, effects_group, attack_group), self.damage, (player_group, enemy_group),
-                       image_list, self, (16, 80 + (i * 64)), 2.6, (False, 1)).rect.h = 16
+                       image_list, self, (16, 80 + (i * 64)), 2.6, (False, 1), "beholder_attack.mp3").rect.h = 16
                 Attack((all_sprites, effects_group, attack_group), self.damage, (player_group, enemy_group),
-                       image_list, self, (16, -48 - (i * 64)), 2.6, (False, -1)).rect.h = 16
+                       image_list, self, (16, -48 - (i * 64)), 2.6, (False, -1), "beholder_attack.mp3").rect.h = 16
         else:
             self.time_attack += 1
 
@@ -226,7 +225,8 @@ class Boss(Enemy):
             attack_revers_y = -player_pos[1] // 64
             self.attack_sprite = Attack((all_sprites, effects_group, attack_group), self.damage, (player_group,),
                                         image_list, self,
-                                        (player_pos[0], player_pos[1]), 1, (attack_revers_x, attack_revers_y))
+                                        (player_pos[0], player_pos[1]), 1, (attack_revers_x, attack_revers_y),
+                                        "boss-attack.mp3")
             self.time_attack = 0
         else:
             self.time_attack += 1

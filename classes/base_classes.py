@@ -57,7 +57,7 @@ class Player(AnimationSprite):
         self.image = self.frames[self.cur_frame]
         self.rect = self.rect.move(x * tile_height, y * tile_width - 12)
         self.hit_points, self.attack_sprite, self.max_hit_points = 5, None, 5
-        self.gold = 0
+        self.gold, self.defeat = 0, False
 
     def update(self):
         self.cur_frame = (self.cur_frame + 1) % len(self.frames)
@@ -118,6 +118,7 @@ class Player(AnimationSprite):
     def damage_counter(self, damage):
         self.hit_points -= damage
         if self.hit_points <= 0:
+            self.defeat = True
             self.kill()
 
 

@@ -3,7 +3,7 @@ import sys
 
 from tools.load_tools import load_image
 from classes.enemys import Skeleton, Beholder, Zombie, Bat, Boss
-from classes.environment import Tile, Wall, Torch, Door
+from classes.environment import Tile, Wall, Torch, Door, Win
 from classes.base_classes import Player
 from groops import all_sprites, enemy_group, wall_group, player_group
 from random import randint
@@ -39,6 +39,8 @@ def generate_level(level, player_image, name_level):
                 enemy_list.append(('S', x, y))
                 Tile((all_sprites,), x, y, f'{link_tile}/{str(randint(1, len_list_tiles))}.png',
                      (tile_width, tile_height), (0, 35))
+            elif level[y][x] == 'W':
+                win_tile = Win((all_sprites,), x, y, 'img/win.png', (tile_width, tile_height), (0, 35))
             elif level[y][x] == 's':
                 enemy_list.append(('s', x, y))
                 Tile((all_sprites,), x, y, f'{link_tile}/{str(randint(1, len_list_tiles))}.png',
@@ -48,10 +50,10 @@ def generate_level(level, player_image, name_level):
                 Tile((all_sprites,), x, y, f'{link_tile}/{str(randint(1, len_list_tiles))}.png',
                      (tile_width, tile_height), (0, 35))
             elif level[y][x] == '!':
-                Wall((all_sprites, wall_group), x, y, f'img/{link_wall}/1.png', (tile_width, tile_height))
+                Wall((all_sprites, wall_group), x, y, f'{link_wall}/#.png', (tile_width, tile_height))
                 Torch((all_sprites,), load_image('img/torch_wall.png'), 3, 1, x, y, tile_width, tile_height)
             elif level[y][x] == "D":
-                Tile((all_sprites,), x, y, 'img/tile.png', (tile_width, tile_height), (0, 35))
+                Tile((all_sprites,), x, y, f'{link_tile}/{str(randint(1, len_list_tiles))}.png', (tile_width, tile_height), (0, 35))
                 Door((all_sprites, wall_group), player_group, x, y, 'img/door_1.png', (tile_width, tile_height),
                      (0, 35))
             elif level[y][x] == 'B':
@@ -95,4 +97,4 @@ def generate_level(level, player_image, name_level):
                      tile_width, tile_height, 'data/sound/skel_death.mp3', (wall_group, player_group, enemy_group))
     new_player = Player((all_sprites, player_group), player_image, 4, 1, player_x, player_y, tile_width, tile_height,
                         (wall_group, enemy_group))
-    return new_player, x, y
+    return new_player, x, y, win_tile
